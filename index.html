@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>❤️ Сюрприз</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a0011, #4a0020);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        h1 {
+            color: white;
+            font-size: 48px;
+            text-shadow: 0 0 30px rgba(255, 0, 100, 0.8);
+            animation: glow 1.5s infinite alternate;
+            z-index: 10;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px hotpink; }
+            to { text-shadow: 0 0 60px red; }
+        }
+
+        .heart {
+            font-size: 150px;
+            color: #ff0040;
+            cursor: pointer;
+            transition: 0.3s;
+            z-index: 10;
+            text-shadow: 0 0 50px #ff0066;
+            animation: beat 1s infinite;
+            user-select: none;
+        }
+
+        @keyframes beat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .heart:active {
+            transform: scale(1.5);
+        }
+
+        #message {
+            color: white;
+            font-size: 28px;
+            margin-top: 30px;
+            opacity: 0;
+            transition: 1.5s;
+            z-index: 10;
+            background: rgba(0,0,0,0.5);
+            padding: 20px 40px;
+            border-radius: 50px;
+            border: 2px solid pink;
+            text-align: center;
+            max-width: 80%;
+        }
+
+        /* Падающие сердечки */
+        .falling-heart {
+            position: fixed;
+            font-size: 30px;
+            top: -50px;
+            z-index: 1;
+            animation: fall linear infinite;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-50px) rotate(0deg); opacity: 0.7; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0.2; }
+        }
+
+        /* Взрыв сердечек при клике */
+        .burst-heart {
+            position: fixed;
+            font-size: 35px;
+            pointer-events: none;
+            z-index: 20;
+            animation: burst 1.5s ease-out forwards;
+        }
+
+        @keyframes burst {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.5); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Имя девушки -->
+    <h1>❤️ линочка ❤️</h1>
+
+    <!-- Главное сердце -->
+    <div class="heart" id="heartButton">❤️</div>
+
+    <!-- Скрытое сообщение -->
+    <div id="message">Ты — моё всё! С тобой я счастлив ❤️</div>
+
+    <script>
+        // ===== 1. Падающие сердечки =====
+        function createFallingHeart() {
+            const heart = document.createElement('div');
+            heart.classList.add('falling-heart');
+            heart.textContent = ['❤️', '💖', '💗', '♥️'][Math.floor(Math.random() * 4)];
+            heart.style.left = Math.random() * 100 + '%';
+            heart.style.fontSize = (Math.random() * 30 + 20) + 'px';
+            heart.style.animationDuration = (Math.random() * 5 + 6) + 's';
+            heart.style.animationDelay = (Math.random() * 3) + 's';
+            document.body.appendChild(heart);
+
+            // Удаляем, чтобы не засоряло
+            setTimeout(() => heart.remove(), 11000);
+        }
+
+        // Запускаем падающие сердечки каждые 0.5 секунды
+        setInterval(createFallingHeart, 500);
+
+        // Сразу создаём несколько при загрузке
+        for (let i = 0; i < 15; i++) {
+            setTimeout(createFallingHeart, i * 300);
+        }
+
+        // ===== 2. Взрыв сердечек при клике =====
+        document.getElementById('heartButton').onclick = function(e) {
+            // Показываем сообщение
+            document.getElementById('message').style.opacity = '1';
+
+            // Взрыв сердечек
+            const x = e.clientX || window.innerWidth / 2;
+            const y = e.clientY || window.innerHeight / 2;
+
+            for (let i = 0; i < 30; i++) {
+                const burst = document.createElement('div');
+                burst.classList.add('burst-heart');
+                burst.textContent = ['❤️', '💖', '💗', '♥️', '💕', '💓'][Math.floor(Math.random() * 6)];
+                burst.style.left = x + 'px';
+                burst.style.top = y + 'px';
+                burst.style.fontSize = (Math.random() * 30 + 20) + 'px';
+
+                const angle = Math.random() * 360;
+                const distance = Math.random() * 400 + 150;
+                burst.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+                burst.style.setProperty('--ty', Math.sin(angle) * distance - 200 + 'px');
+
+                document.body.appendChild(burst);
+                setTimeout(() => burst.remove(), 1500);
+            }
+        };
+
+        // ===== 3. Музыка (простая мелодия на JavaScript) =====
+        // Играет тихую красивую мелодию при открытии страницы
+        function playSimpleTune() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const notes = [523, 587, 659, 784, 880, 784, 880, 988]; // До Ре Ми Соль...
+
+                notes.forEach((freq, index) => {
+                    setTimeout(() => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.frequency.value = freq;
+                        osc.type = 'sine';
+                        gain.gain.value = 0.08; // Тихо, чтобы не раздражало
+                        osc.start();
+                        setTimeout(() => osc.stop(), 300);
+                    }, index * 300);
+                });
+            } catch (e) {
+                // Если браузер не поддерживает - просто тишина
+            }
+        }
+
+        // Включаем музыку после того, как пользователь кликнет по странице (из-за политики браузеров)
+        document.addEventListener('click', function startMusic() {
+            playSimpleTune();
+            document.removeEventListener('click', startMusic);
+        }, { once: true });
+
+        // Если не кликнули, запускаем через 2 секунды (на некоторых телефонах сработает)
+        setTimeout(() => {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            } catch (e) {}
+        }, 2000);
+    </script>
+
+</body>
+</html>
