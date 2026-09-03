@@ -19,14 +19,12 @@
             font-family: 'Arial', sans-serif;
         }
 
-        /* Контейнер с точками */
         #container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
 
-        /* Каждая точка */
         .dot {
             position: absolute;
             width: 12px;
@@ -38,7 +36,6 @@
             cursor: pointer;
         }
 
-        /* Когда точка собралась в сердце */
         .dot.assembled {
             background: #ff0040;
             box-shadow: 0 0 20px #ff0066, 0 0 40px #ff0040;
@@ -46,27 +43,40 @@
             height: 14px;
         }
 
-        /* Имя внутри сердца */
-        #name {
+        #nameBlock {
             position: absolute;
-            font-size: 60px;
+            z-index: 100;
+            pointer-events: none;
+            text-align: center;
+            width: 100%;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+
+        #nameBlock.show {
+            opacity: 1;
+        }
+
+        #nameBlock .name {
+            font-size: 55px;
             font-weight: bold;
             color: white;
             text-shadow: 0 0 30px #ff0066, 0 0 60px #ff0040, 0 0 100px #ff0066;
-            opacity: 0;
-            z-index: 100;
-            pointer-events: none;
-            transform: scale(0);
-            transition: all 1s ease;
-            text-align: center;
+            display: block;
+            margin-bottom: 15px;
         }
 
-        #name.show {
-            opacity: 1;
-            transform: scale(1);
+        #nameBlock .text {
+            font-size: 24px;
+            color: #ff99bb;
+            text-shadow: 0 0 20px #ff0066;
+            display: block;
+            letter-spacing: 1px;
         }
 
-        /* Подсказка */
         #hint {
             position: absolute;
             bottom: 60px;
@@ -84,7 +94,6 @@
             50% { opacity: 0.9; }
         }
 
-        /* Сердечко при клике */
         .burst-heart {
             position: fixed;
             font-size: 30px;
@@ -98,7 +107,6 @@
             100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.2); }
         }
 
-        /* Конфетти */
         .confetti {
             position: fixed;
             width: 10px;
@@ -117,27 +125,26 @@
 <body>
 
     <div id="container"></div>
-    <div id="name">линочкаа</div>
+
+    <div id="nameBlock">
+        <span class="name">ЛИНОЧКА</span>
+        <span class="text">Ты — мой мир! С тобой я счастлив ❤️</span>
+    </div>
+
     <div id="hint">👆 Нажми в любом месте экрана</div>
 
     <script>
-        // ===== НАСТРОЙКИ =====
-        const GIRL_NAME = 'линаа'; // ЗАМЕНИ НА ИМЯ ДЕВУШКИ
-        const DOT_COUNT = 250; // Количество точек (можно увеличить)
-
+        const DOT_COUNT = 250;
         const container = document.getElementById('container');
-        const nameElement = document.getElementById('name');
+        const nameBlock = document.getElementById('nameBlock');
         const hint = document.getElementById('hint');
 
         let dots = [];
         let isAssembled = false;
 
-        // ===== 1. СОЗДАЁМ ТОЧКИ =====
         function createDots() {
             const w = window.innerWidth;
             const h = window.innerHeight;
-
-            // Координаты сердца (центр)
             const cx = w / 2;
             const cy = h / 2;
             const scale = Math.min(w, h) / 5;
@@ -146,7 +153,6 @@
                 const dot = document.createElement('div');
                 dot.className = 'dot';
 
-                // Случайная позиция по всему экрану
                 const x = Math.random() * w;
                 const y = Math.random() * h;
                 dot.style.left = x + 'px';
@@ -154,28 +160,16 @@
                 dot.style.width = (Math.random() * 8 + 6) + 'px';
                 dot.style.height = dot.style.width;
 
-                // Запоминаем случайную позицию
-                const startX = x;
-                const startY = y;
-
-                // Вычисляем позицию в форме сердца
-                // Формула сердца: x = 16*sin³(t), y = 13*cos(t) - 5*cos(2t) - 2*cos(3t) - cos(4t)
                 const t = (i / DOT_COUNT) * Math.PI * 2;
                 const heartX = 16 * Math.pow(Math.sin(t), 3);
                 const heartY = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
 
-                // Масштабируем и центрируем
                 const targetX = cx + heartX * scale * 0.7;
                 const targetY = cy - heartY * scale * 0.7 + 20;
 
-                // Сохраняем данные в элемент
-                dot.dataset.startX = startX;
-                dot.dataset.startY = startY;
                 dot.dataset.targetX = targetX;
                 dot.dataset.targetY = targetY;
-                dot.dataset.assembled = 'false';
 
-                // При клике на точку - собираем всё
                 dot.addEventListener('click', assembleHearts);
                 dot.addEventListener('touchend', function(e) {
                     e.preventDefault();
@@ -187,18 +181,15 @@
             }
         }
 
-        // ===== 2. СБОРКА В СЕРДЦЕ =====
         let isAnimating = false;
 
         function assembleHearts() {
             if (isAnimating || isAssembled) return;
             isAnimating = true;
 
-            // Убираем подсказку
             hint.style.opacity = '0';
             hint.style.transition = '0.5s';
 
-            // Собираем все точки в сердце
             dots.forEach((dot, index) => {
                 setTimeout(() => {
                     const targetX = parseFloat(dot.dataset.targetX);
@@ -206,28 +197,21 @@
                     dot.style.left = targetX + 'px';
                     dot.style.top = targetY + 'px';
                     dot.classList.add('assembled');
-                    dot.dataset.assembled = 'true';
-                }, index * 6); // Задержка для эффекта "слетания"
+                }, index * 6);
             });
 
-            // Показываем имя
             setTimeout(() => {
-                nameElement.textContent = GIRL_NAME;
-                nameElement.style.left = (window.innerWidth / 2 - 100) + 'px';
-                nameElement.style.top = (window.innerHeight / 2 - 40) + 'px';
-                nameElement.classList.add('show');
+                nameBlock.classList.add('show');
             }, DOT_COUNT * 6 + 500);
 
-            // Взрыв конфетти и сердечек
             setTimeout(() => {
                 isAssembled = true;
                 isAnimating = false;
                 createExplosion();
                 createConfetti();
-            }, DOT_COUNT * 6 + 1200);
+            }, DOT_COUNT * 6 + 1500);
         }
 
-        // ===== 3. ВЗРЫВ СЕРДЕЧЕК =====
         function createExplosion() {
             const emojis = ['❤️', '💖', '💗', '♥️', '💕', '💓', '💝'];
             const cx = window.innerWidth / 2;
@@ -251,7 +235,6 @@
             }
         }
 
-        // ===== 4. КОНФЕТТИ =====
         function createConfetti() {
             const colors = ['#ff0066', '#ff3388', '#ff6699', '#ff99bb', '#ffccdd', '#ff0040'];
 
@@ -271,7 +254,6 @@
             }
         }
 
-        // ===== 5. МУЗЫКА (колокольчики) =====
         function playMusic() {
             try {
                 const ctx = new(window.AudioContext || window.webkitAudioContext)();
@@ -293,25 +275,20 @@
             } catch (e) {}
         }
 
-        // ===== 6. ЗАПУСК =====
         createDots();
 
-        // Если пользователь не кликнул через 3 секунды — автоматический показ
         setTimeout(() => {
             if (!isAssembled && !isAnimating) {
                 assembleHearts();
             }
         }, 8000);
 
-        // Включаем музыку после клика
         document.addEventListener('click', function startMusic() {
             playMusic();
             document.removeEventListener('click', startMusic);
         }, { once: true });
 
-        // Адаптация при повороте экрана
         window.addEventListener('resize', () => {
-            // Пересоздаём точки при изменении размера
             if (!isAssembled) {
                 container.innerHTML = '';
                 dots = [];
