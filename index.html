@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>❤️ Сюрприз</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         * {
             margin: 0;
@@ -27,20 +28,20 @@
 
         .dot {
             position: absolute;
-            width: 12px;
-            height: 12px;
+            width: 10px;
+            height: 10px;
             background: #ff3388;
             border-radius: 50%;
-            box-shadow: 0 0 10px #ff0066;
+            box-shadow: 0 0 8px #ff0066;
             transition: all 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             cursor: pointer;
         }
 
         .dot.assembled {
             background: #ff0040;
-            box-shadow: 0 0 20px #ff0066, 0 0 40px #ff0040;
-            width: 14px;
-            height: 14px;
+            box-shadow: 0 0 15px #ff0066, 0 0 30px #ff0040;
+            width: 11px;
+            height: 11px;
         }
 
         #nameBlock {
@@ -54,6 +55,8 @@
             transform: translateY(-50%);
             opacity: 0;
             transition: opacity 1.5s ease;
+            padding: 0 20px;
+            box-sizing: border-box;
         }
 
         #nameBlock.show {
@@ -61,27 +64,28 @@
         }
 
         #nameBlock .name {
-            font-size: 55px;
+            font-size: 38px;
             font-weight: bold;
             color: white;
             text-shadow: 0 0 30px #ff0066, 0 0 60px #ff0040, 0 0 100px #ff0066;
             display: block;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         #nameBlock .text {
-            font-size: 24px;
+            font-size: 18px;
             color: #ff99bb;
             text-shadow: 0 0 20px #ff0066;
             display: block;
             letter-spacing: 1px;
+            padding: 0 10px;
         }
 
         #hint {
             position: absolute;
-            bottom: 60px;
+            bottom: 40px;
             color: rgba(255, 255, 255, 0.4);
-            font-size: 18px;
+            font-size: 16px;
             z-index: 50;
             animation: blink 1.5s infinite;
             text-align: center;
@@ -96,7 +100,7 @@
 
         .burst-heart {
             position: fixed;
-            font-size: 30px;
+            font-size: 25px;
             pointer-events: none;
             z-index: 200;
             animation: burst 2s ease-out forwards;
@@ -109,8 +113,8 @@
 
         .confetti {
             position: fixed;
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             pointer-events: none;
             z-index: 150;
             animation: confettiFall 2.5s ease-in forwards;
@@ -134,7 +138,7 @@
     <div id="hint">👆 Нажми в любом месте экрана</div>
 
     <script>
-        const DOT_COUNT = 250;
+        const DOT_COUNT = 200;
         const container = document.getElementById('container');
         const nameBlock = document.getElementById('nameBlock');
         const hint = document.getElementById('hint');
@@ -147,7 +151,8 @@
             const h = window.innerHeight;
             const cx = w / 2;
             const cy = h / 2;
-            const scale = Math.min(w, h) / 5;
+            // Уменьшил масштаб сердца
+            const scale = Math.min(w, h) / 6.5;
 
             for (let i = 0; i < DOT_COUNT; i++) {
                 const dot = document.createElement('div');
@@ -157,15 +162,16 @@
                 const y = Math.random() * h;
                 dot.style.left = x + 'px';
                 dot.style.top = y + 'px';
-                dot.style.width = (Math.random() * 8 + 6) + 'px';
-                dot.style.height = dot.style.width;
+                const size = Math.random() * 6 + 5;
+                dot.style.width = size + 'px';
+                dot.style.height = size + 'px';
 
                 const t = (i / DOT_COUNT) * Math.PI * 2;
                 const heartX = 16 * Math.pow(Math.sin(t), 3);
                 const heartY = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
 
-                const targetX = cx + heartX * scale * 0.7;
-                const targetY = cy - heartY * scale * 0.7 + 20;
+                const targetX = cx + heartX * scale * 0.6;
+                const targetY = cy - heartY * scale * 0.6 + 20;
 
                 dot.dataset.targetX = targetX;
                 dot.dataset.targetY = targetY;
@@ -197,19 +203,19 @@
                     dot.style.left = targetX + 'px';
                     dot.style.top = targetY + 'px';
                     dot.classList.add('assembled');
-                }, index * 6);
+                }, index * 5);
             });
 
             setTimeout(() => {
                 nameBlock.classList.add('show');
-            }, DOT_COUNT * 6 + 500);
+            }, DOT_COUNT * 5 + 400);
 
             setTimeout(() => {
                 isAssembled = true;
                 isAnimating = false;
                 createExplosion();
                 createConfetti();
-            }, DOT_COUNT * 6 + 1500);
+            }, DOT_COUNT * 5 + 1200);
         }
 
         function createExplosion() {
@@ -217,18 +223,18 @@
             const cx = window.innerWidth / 2;
             const cy = window.innerHeight / 2;
 
-            for (let i = 0; i < 50; i++) {
+            for (let i = 0; i < 40; i++) {
                 const el = document.createElement('div');
                 el.className = 'burst-heart';
                 el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
                 el.style.left = cx + 'px';
                 el.style.top = cy + 'px';
-                el.style.fontSize = (Math.random() * 30 + 20) + 'px';
+                el.style.fontSize = (Math.random() * 25 + 15) + 'px';
 
                 const angle = Math.random() * 360;
-                const distance = Math.random() * 500 + 200;
+                const distance = Math.random() * 350 + 150;
                 el.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
-                el.style.setProperty('--ty', Math.sin(angle) * distance - 300 + 'px');
+                el.style.setProperty('--ty', Math.sin(angle) * distance - 200 + 'px');
 
                 document.body.appendChild(el);
                 setTimeout(() => el.remove(), 2000);
@@ -238,14 +244,14 @@
         function createConfetti() {
             const colors = ['#ff0066', '#ff3388', '#ff6699', '#ff99bb', '#ffccdd', '#ff0040'];
 
-            for (let i = 0; i < 80; i++) {
+            for (let i = 0; i < 60; i++) {
                 const el = document.createElement('div');
                 el.className = 'confetti';
                 el.style.left = Math.random() * window.innerWidth + 'px';
                 el.style.top = '-20px';
                 el.style.background = colors[Math.floor(Math.random() * colors.length)];
-                el.style.width = (Math.random() * 8 + 4) + 'px';
-                el.style.height = (Math.random() * 8 + 4) + 'px';
+                el.style.width = (Math.random() * 6 + 3) + 'px';
+                el.style.height = (Math.random() * 6 + 3) + 'px';
                 el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
                 el.style.animationDelay = (Math.random() * 1.5) + 's';
 
@@ -267,7 +273,7 @@
                         gain.connect(ctx.destination);
                         osc.frequency.value = freq;
                         osc.type = 'sine';
-                        gain.gain.value = 0.06;
+                        gain.gain.value = 0.05;
                         osc.start();
                         setTimeout(() => osc.stop(), 200);
                     }, i * 200 + 500);
