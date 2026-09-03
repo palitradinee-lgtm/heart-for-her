@@ -3,204 +3,321 @@
 <head>
     <title>❤️ Сюрприз</title>
     <style>
-        body {
+        * {
             margin: 0;
+            padding: 0;
+        }
+
+        body {
             height: 100vh;
-            background: linear-gradient(135deg, #1a0011, #4a0020);
+            background: #0d0015;
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-direction: column;
-            font-family: 'Arial', sans-serif;
             overflow: hidden;
+            touch-action: none;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Контейнер с точками */
+        #container {
             position: relative;
+            width: 100vw;
+            height: 100vh;
         }
 
-        h1 {
-            color: white;
-            font-size: 48px;
-            text-shadow: 0 0 30px rgba(255, 0, 100, 0.8);
-            animation: glow 1.5s infinite alternate;
-            z-index: 10;
-            text-align: center;
-            padding: 0 20px;
-        }
-
-        @keyframes glow {
-            from { text-shadow: 0 0 20px hotpink; }
-            to { text-shadow: 0 0 60px red; }
-        }
-
-        .heart {
-            font-size: 150px;
-            color: #ff0040;
+        /* Каждая точка */
+        .dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #ff3388;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ff0066;
+            transition: all 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             cursor: pointer;
-            transition: 0.3s;
-            z-index: 10;
-            text-shadow: 0 0 50px #ff0066;
-            animation: beat 1s infinite;
-            user-select: none;
         }
 
-        @keyframes beat {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
+        /* Когда точка собралась в сердце */
+        .dot.assembled {
+            background: #ff0040;
+            box-shadow: 0 0 20px #ff0066, 0 0 40px #ff0040;
+            width: 14px;
+            height: 14px;
         }
 
-        .heart:active {
-            transform: scale(1.5);
-        }
-
-        #message {
+        /* Имя внутри сердца */
+        #name {
+            position: absolute;
+            font-size: 60px;
+            font-weight: bold;
             color: white;
-            font-size: 28px;
-            margin-top: 30px;
+            text-shadow: 0 0 30px #ff0066, 0 0 60px #ff0040, 0 0 100px #ff0066;
             opacity: 0;
-            transition: 1.5s;
-            z-index: 10;
-            background: rgba(0,0,0,0.5);
-            padding: 20px 40px;
-            border-radius: 50px;
-            border: 2px solid pink;
-            text-align: center;
-            max-width: 80%;
-        }
-
-        /* Падающие сердечки */
-        .falling-heart {
-            position: fixed;
-            font-size: 30px;
-            top: -50px;
-            z-index: 1;
-            animation: fall linear infinite;
+            z-index: 100;
             pointer-events: none;
-            opacity: 0.7;
+            transform: scale(0);
+            transition: all 1s ease;
+            text-align: center;
         }
 
-        @keyframes fall {
-            0% { transform: translateY(-50px) rotate(0deg); opacity: 0.7; }
-            100% { transform: translateY(110vh) rotate(720deg); opacity: 0.2; }
+        #name.show {
+            opacity: 1;
+            transform: scale(1);
         }
 
-        /* Взрыв сердечек при клике */
+        /* Подсказка */
+        #hint {
+            position: absolute;
+            bottom: 60px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 18px;
+            z-index: 50;
+            animation: blink 1.5s infinite;
+            text-align: center;
+            width: 100%;
+            pointer-events: none;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.9; }
+        }
+
+        /* Сердечко при клике */
         .burst-heart {
             position: fixed;
-            font-size: 35px;
+            font-size: 30px;
             pointer-events: none;
-            z-index: 20;
-            animation: burst 1.5s ease-out forwards;
+            z-index: 200;
+            animation: burst 2s ease-out forwards;
         }
 
         @keyframes burst {
             0% { opacity: 1; transform: translate(0, 0) scale(1); }
-            100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.5); }
+            100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.2); }
+        }
+
+        /* Конфетти */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            z-index: 150;
+            animation: confettiFall 2.5s ease-in forwards;
+        }
+
+        @keyframes confettiFall {
+            0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+            100% { opacity: 0; transform: translateY(100vh) rotate(720deg) scale(0.3); }
         }
     </style>
 </head>
 <body>
 
-    <!-- Имя девушки -->
-    <h1>❤️ линочка ❤️</h1>
-
-    <!-- Главное сердце -->
-    <div class="heart" id="heartButton">❤️</div>
-
-    <!-- Скрытое сообщение -->
-    <div id="message">Ты — мой мир С тобой я счастлив ❤️</div>
+    <div id="container"></div>
+    <div id="name">линочкаа</div>
+    <div id="hint">👆 Нажми в любом месте экрана</div>
 
     <script>
-        // ===== 1. Падающие сердечки =====
-        function createFallingHeart() {
-            const heart = document.createElement('div');
-            heart.classList.add('falling-heart');
-            heart.textContent = ['❤️', '💖', '💗', '♥️'][Math.floor(Math.random() * 4)];
-            heart.style.left = Math.random() * 100 + '%';
-            heart.style.fontSize = (Math.random() * 30 + 20) + 'px';
-            heart.style.animationDuration = (Math.random() * 5 + 6) + 's';
-            heart.style.animationDelay = (Math.random() * 3) + 's';
-            document.body.appendChild(heart);
+        // ===== НАСТРОЙКИ =====
+        const GIRL_NAME = '[ЕЁ ИМЯ]'; // ЗАМЕНИ НА ИМЯ ДЕВУШКИ
+        const DOT_COUNT = 250; // Количество точек (можно увеличить)
 
-            // Удаляем, чтобы не засоряло
-            setTimeout(() => heart.remove(), 11000);
+        const container = document.getElementById('container');
+        const nameElement = document.getElementById('name');
+        const hint = document.getElementById('hint');
+
+        let dots = [];
+        let isAssembled = false;
+
+        // ===== 1. СОЗДАЁМ ТОЧКИ =====
+        function createDots() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+
+            // Координаты сердца (центр)
+            const cx = w / 2;
+            const cy = h / 2;
+            const scale = Math.min(w, h) / 5;
+
+            for (let i = 0; i < DOT_COUNT; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+
+                // Случайная позиция по всему экрану
+                const x = Math.random() * w;
+                const y = Math.random() * h;
+                dot.style.left = x + 'px';
+                dot.style.top = y + 'px';
+                dot.style.width = (Math.random() * 8 + 6) + 'px';
+                dot.style.height = dot.style.width;
+
+                // Запоминаем случайную позицию
+                const startX = x;
+                const startY = y;
+
+                // Вычисляем позицию в форме сердца
+                // Формула сердца: x = 16*sin³(t), y = 13*cos(t) - 5*cos(2t) - 2*cos(3t) - cos(4t)
+                const t = (i / DOT_COUNT) * Math.PI * 2;
+                const heartX = 16 * Math.pow(Math.sin(t), 3);
+                const heartY = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+
+                // Масштабируем и центрируем
+                const targetX = cx + heartX * scale * 0.7;
+                const targetY = cy - heartY * scale * 0.7 + 20;
+
+                // Сохраняем данные в элемент
+                dot.dataset.startX = startX;
+                dot.dataset.startY = startY;
+                dot.dataset.targetX = targetX;
+                dot.dataset.targetY = targetY;
+                dot.dataset.assembled = 'false';
+
+                // При клике на точку - собираем всё
+                dot.addEventListener('click', assembleHearts);
+                dot.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    assembleHearts();
+                });
+
+                container.appendChild(dot);
+                dots.push(dot);
+            }
         }
 
-        // Запускаем падающие сердечки каждые 0.5 секунды
-        setInterval(createFallingHeart, 500);
+        // ===== 2. СБОРКА В СЕРДЦЕ =====
+        let isAnimating = false;
 
-        // Сразу создаём несколько при загрузке
-        for (let i = 0; i < 15; i++) {
-            setTimeout(createFallingHeart, i * 300);
+        function assembleHearts() {
+            if (isAnimating || isAssembled) return;
+            isAnimating = true;
+
+            // Убираем подсказку
+            hint.style.opacity = '0';
+            hint.style.transition = '0.5s';
+
+            // Собираем все точки в сердце
+            dots.forEach((dot, index) => {
+                setTimeout(() => {
+                    const targetX = parseFloat(dot.dataset.targetX);
+                    const targetY = parseFloat(dot.dataset.targetY);
+                    dot.style.left = targetX + 'px';
+                    dot.style.top = targetY + 'px';
+                    dot.classList.add('assembled');
+                    dot.dataset.assembled = 'true';
+                }, index * 6); // Задержка для эффекта "слетания"
+            });
+
+            // Показываем имя
+            setTimeout(() => {
+                nameElement.textContent = GIRL_NAME;
+                nameElement.style.left = (window.innerWidth / 2 - 100) + 'px';
+                nameElement.style.top = (window.innerHeight / 2 - 40) + 'px';
+                nameElement.classList.add('show');
+            }, DOT_COUNT * 6 + 500);
+
+            // Взрыв конфетти и сердечек
+            setTimeout(() => {
+                isAssembled = true;
+                isAnimating = false;
+                createExplosion();
+                createConfetti();
+            }, DOT_COUNT * 6 + 1200);
         }
 
-        // ===== 2. Взрыв сердечек при клике =====
-        document.getElementById('heartButton').onclick = function(e) {
-            // Показываем сообщение
-            document.getElementById('message').style.opacity = '1';
+        // ===== 3. ВЗРЫВ СЕРДЕЧЕК =====
+        function createExplosion() {
+            const emojis = ['❤️', '💖', '💗', '♥️', '💕', '💓', '💝'];
+            const cx = window.innerWidth / 2;
+            const cy = window.innerHeight / 2;
 
-            // Взрыв сердечек
-            const x = e.clientX || window.innerWidth / 2;
-            const y = e.clientY || window.innerHeight / 2;
-
-            for (let i = 0; i < 30; i++) {
-                const burst = document.createElement('div');
-                burst.classList.add('burst-heart');
-                burst.textContent = ['❤️', '💖', '💗', '♥️', '💕', '💓'][Math.floor(Math.random() * 6)];
-                burst.style.left = x + 'px';
-                burst.style.top = y + 'px';
-                burst.style.fontSize = (Math.random() * 30 + 20) + 'px';
+            for (let i = 0; i < 50; i++) {
+                const el = document.createElement('div');
+                el.className = 'burst-heart';
+                el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                el.style.left = cx + 'px';
+                el.style.top = cy + 'px';
+                el.style.fontSize = (Math.random() * 30 + 20) + 'px';
 
                 const angle = Math.random() * 360;
-                const distance = Math.random() * 400 + 150;
-                burst.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
-                burst.style.setProperty('--ty', Math.sin(angle) * distance - 200 + 'px');
+                const distance = Math.random() * 500 + 200;
+                el.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+                el.style.setProperty('--ty', Math.sin(angle) * distance - 300 + 'px');
 
-                document.body.appendChild(burst);
-                setTimeout(() => burst.remove(), 1500);
-            }
-        };
-
-        // ===== 3. Музыка (простая мелодия на JavaScript) =====
-        // Играет тихую красивую мелодию при открытии страницы
-        function playSimpleTune() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const notes = [523, 587, 659, 784, 880, 784, 880, 988]; // До Ре Ми Соль...
-
-                notes.forEach((freq, index) => {
-                    setTimeout(() => {
-                        const osc = audioCtx.createOscillator();
-                        const gain = audioCtx.createGain();
-                        osc.connect(gain);
-                        gain.connect(audioCtx.destination);
-                        osc.frequency.value = freq;
-                        osc.type = 'sine';
-                        gain.gain.value = 0.08; // Тихо, чтобы не раздражало
-                        osc.start();
-                        setTimeout(() => osc.stop(), 300);
-                    }, index * 300);
-                });
-            } catch (e) {
-                // Если браузер не поддерживает - просто тишина
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 2000);
             }
         }
 
-        // Включаем музыку после того, как пользователь кликнет по странице (из-за политики браузеров)
+        // ===== 4. КОНФЕТТИ =====
+        function createConfetti() {
+            const colors = ['#ff0066', '#ff3388', '#ff6699', '#ff99bb', '#ffccdd', '#ff0040'];
+
+            for (let i = 0; i < 80; i++) {
+                const el = document.createElement('div');
+                el.className = 'confetti';
+                el.style.left = Math.random() * window.innerWidth + 'px';
+                el.style.top = '-20px';
+                el.style.background = colors[Math.floor(Math.random() * colors.length)];
+                el.style.width = (Math.random() * 8 + 4) + 'px';
+                el.style.height = (Math.random() * 8 + 4) + 'px';
+                el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                el.style.animationDelay = (Math.random() * 1.5) + 's';
+
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 3000);
+            }
+        }
+
+        // ===== 5. МУЗЫКА (колокольчики) =====
+        function playMusic() {
+            try {
+                const ctx = new(window.AudioContext || window.webkitAudioContext)();
+                const notes = [523, 659, 784, 880, 988, 784, 880, 1047];
+
+                notes.forEach((freq, i) => {
+                    setTimeout(() => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.frequency.value = freq;
+                        osc.type = 'sine';
+                        gain.gain.value = 0.06;
+                        osc.start();
+                        setTimeout(() => osc.stop(), 200);
+                    }, i * 200 + 500);
+                });
+            } catch (e) {}
+        }
+
+        // ===== 6. ЗАПУСК =====
+        createDots();
+
+        // Если пользователь не кликнул через 3 секунды — автоматический показ
+        setTimeout(() => {
+            if (!isAssembled && !isAnimating) {
+                assembleHearts();
+            }
+        }, 8000);
+
+        // Включаем музыку после клика
         document.addEventListener('click', function startMusic() {
-            playSimpleTune();
+            playMusic();
             document.removeEventListener('click', startMusic);
         }, { once: true });
 
-        // Если не кликнули, запускаем через 2 секунды (на некоторых телефонах сработает)
-        setTimeout(() => {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-            } catch (e) {}
-        }, 2000);
+        // Адаптация при повороте экрана
+        window.addEventListener('resize', () => {
+            // Пересоздаём точки при изменении размера
+            if (!isAssembled) {
+                container.innerHTML = '';
+                dots = [];
+                createDots();
+            }
+        });
     </script>
-
 </body>
 </html>
